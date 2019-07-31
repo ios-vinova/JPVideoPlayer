@@ -694,7 +694,7 @@ shouldPausePlaybackWhenReceiveAudioSessionInterruptionNotificationForURL:self.ma
 #pragma mark - Playback Record
 
 - (double)fetchPlaybackRecordForVideoURL:(NSURL *)videoURL {
-    NSParameterAssert(videoURL);
+    // NSParameterAssert(videoURL);
     if(!videoURL){
         return 0;
     }
@@ -711,7 +711,7 @@ shouldPausePlaybackWhenReceiveAudioSessionInterruptionNotificationForURL:self.ma
 
 - (void)savePlaybackElapsedSeconds:(double)elapsedSeconds
                        forVideoURL:(NSURL *)videoURL {
-    NSParameterAssert(videoURL);
+    // NSParameterAssert(videoURL);
     if(!videoURL){
         return;
     }
