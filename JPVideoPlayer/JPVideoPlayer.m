@@ -129,8 +129,26 @@ static NSString *JPVideoPlayerURL = @"www.newpan.com";
 }
 
 - (void)stopPlay {
-    self.cancelled = YES;
-    [self reset];
+    if (self.player == nil) {
+        self.cancelled = YES;
+        [self reset];
+        return;
+    }
+    
+    if (self.player.volume > 0.1) {
+        NSLog(@"???Volumn down-ing");
+        self.player.volume = self.player.volume - 0.1;
+        
+        double delayInSeconds = 0.1;
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+        dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+            [self stopPlay];
+        });
+    } else {
+        NSLog(@"???Volumn down ended");
+        self.cancelled = YES;
+        [self reset];
+    }
 }
 
 - (void)reset {
