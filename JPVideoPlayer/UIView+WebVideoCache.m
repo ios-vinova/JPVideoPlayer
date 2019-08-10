@@ -28,6 +28,7 @@
 @property(nonatomic, weak) id<JPVideoPlayerDelegate> videoPlayerDelegate;
 
 @property(nonatomic, assign) JPVideoPlayViewInterfaceOrientation viewInterfaceOrientation;
+@property(nonatomic, assign) JPVideoPlayViewInterfaceOrientation currentViewInterfaceOrientationLandscapeMode;
 
 @property(nonatomic, assign)JPVideoPlayerStatus playerStatus;
 
@@ -50,10 +51,25 @@
 - (JPVideoPlayViewInterfaceOrientation)viewInterfaceOrientation {
     if(_viewInterfaceOrientation == JPVideoPlayViewInterfaceOrientationUnknown){
        CGSize referenceSize = self.playVideoView.window.bounds.size;
-       _viewInterfaceOrientation = referenceSize.width < referenceSize.height ? JPVideoPlayViewInterfaceOrientationPortrait :
-               JPVideoPlayViewInterfaceOrientationLandscape;
+       _viewInterfaceOrientation = referenceSize.width < referenceSize.height ? JPVideoPlayViewInterfaceOrientationPortrait : [self currentViewInterfaceOrientationLandscapeMode];;
     }
     return _viewInterfaceOrientation;
+}
+
+- (JPVideoPlayViewInterfaceOrientation)currentViewInterfaceOrientationLandscapeMode {
+    JPVideoPlayViewInterfaceOrientation currentLandscapeMode = JPVideoPlayViewInterfaceOrientationLandscapeLeft;
+    if ([self isDeviceInterfaceOrientationLandscapeRight]) {
+        currentLandscapeMode = JPVideoPlayViewInterfaceOrientationLandscapeRight;
+    }
+    return currentLandscapeMode;
+}
+
+- (UIInterfaceOrientation)deviceInterfaceOrientation {
+    return [UIApplication.sharedApplication statusBarOrientation];
+}
+
+- (UIInterfaceOrientation)isDeviceInterfaceOrientationLandscapeRight {
+    return [self deviceInterfaceOrientation] == UIInterfaceOrientationLandscapeRight;
 }
 
 - (JPVideoPlayerView *)videoPlayerView {
@@ -419,18 +435,26 @@
 
 #pragma mark - Landscape & Portrait Control
 
-- (void)jp_gotoLandscape {
-    [self jp_gotoLandscapeAnimated:YES
-                        completion:nil];
+- (void)jp_gotoLandscapeLeft {
+    [self jp_gotoLandscape:JPVideoPlayViewInterfaceOrientationLandscapeLeft
+                  animated:YES
+                completion:nil];
 }
 
-- (void)jp_gotoLandscapeAnimated:(BOOL)flag
-                      completion:(dispatch_block_t)completion {
-    if (self.jp_viewInterfaceOrientation != JPVideoPlayViewInterfaceOrientationPortrait) {
+- (void)jp_gotoLandscapeRight {
+    [self jp_gotoLandscape:JPVideoPlayViewInterfaceOrientationLandscapeRight
+                  animated:YES
+                completion:nil];
+}
+
+- (void)jp_gotoLandscape:(JPVideoPlayViewInterfaceOrientation) orientation
+                animated:(BOOL)flag
+              completion:(dispatch_block_t)completion {
+    if (self.jp_viewInterfaceOrientation == orientation) {
         return;
     }
 
-    self.helper.viewInterfaceOrientation = JPVideoPlayViewInterfaceOrientationLandscape;
+    self.helper.viewInterfaceOrientation = orientation;
     JPVideoPlayerView *videoPlayerView = self.helper.videoPlayerView;
     videoPlayerView.backgroundColor = [UIColor blackColor];
 
@@ -445,7 +469,11 @@
                               delay:0
                             options:UIViewAnimationOptionCurveEaseOut
                          animations:^{
-                             [self executeLandscape];
+                            if (orientation == JPVideoPlayViewInterfaceOrientationLandscapeRight) {
+                                [self executeLandscapeRight];
+                            } else {
+                                [self executeLandscapeLeft];
+                            }
                          }
                          completion:^(BOOL finished) {
                              if (completion) {
@@ -462,7 +490,11 @@
                          }];
     }
     else{
-        [self executeLandscape];
+        if (orientation == JPVideoPlayViewInterfaceOrientationLandscapeRight) {
+            [self executeLandscapeRight];
+        } else {
+            [self executeLandscapeLeft];
+        }
         if (completion) {
             completion();
         }
@@ -470,8 +502,8 @@
             videoPlayerView.controlContainerView.alpha = 0;
         }];
     }
-    [self refreshStatusBarOrientation:UIInterfaceOrientationLandscapeRight];
-    [self callOrientationDelegateWithInterfaceOrientation:JPVideoPlayViewInterfaceOrientationLandscape];
+    [self refreshStatusBarOrientation:[UIApplication.sharedApplication statusBarOrientation]];
+    [self callOrientationDelegateWithInterfaceOrientation:orientation];
 }
 
 - (void)jp_gotoPortrait {
@@ -481,7 +513,7 @@
 
 - (void)jp_gotoPortraitAnimated:(BOOL)flag
                      completion:(dispatch_block_t)completion{
-    if (self.jp_viewInterfaceOrientation != JPVideoPlayViewInterfaceOrientationLandscape) {
+    if (self.jp_viewInterfaceOrientation == JPVideoPlayViewInterfaceOrientationPortrait) {
         return;
     }
 
@@ -559,21 +591,32 @@
 }
 
 - (void)executePortrait {
-    UIView *videoPlayerView = self.helper.videoPlayerView;
+    JPVideoPlayerView *videoPlayerView = self.helper.videoPlayerView;
     CGRect frame = [self.superview convertRect:self.frame toView:nil];
     videoPlayerView.transform = CGAffineTransformIdentity;
     videoPlayerView.frame = frame;
     [[JPVideoPlayerManager sharedManager] videoPlayer].playerModel.playerLayer.frame = self.bounds;
 }
 
-- (void)executeLandscape {
-    UIView *videoPlayerView = self.helper.videoPlayerView;
+- (void)executeLandscapeLeft {
+    JPVideoPlayerView *videoPlayerView = self.helper.videoPlayerView;
     CGRect screenBounds = [[UIScreen mainScreen] bounds];
     CGRect bounds = CGRectMake(0, 0, CGRectGetHeight(screenBounds), CGRectGetWidth(screenBounds));
     CGPoint center = CGPointMake(CGRectGetMidX(screenBounds), CGRectGetMidY(screenBounds));
     videoPlayerView.bounds = bounds;
     videoPlayerView.center = center;
     videoPlayerView.transform = CGAffineTransformMakeRotation(M_PI_2);
+    [[JPVideoPlayerManager sharedManager] videoPlayer].playerModel.playerLayer.frame = bounds;
+}
+
+- (void)executeLandscapeRight {
+    UIView *videoPlayerView = self.helper.videoPlayerView;
+    CGRect screenBounds = [[UIScreen mainScreen] bounds];
+    CGRect bounds = CGRectMake(0, 0, CGRectGetHeight(screenBounds), CGRectGetWidth(screenBounds));
+    CGPoint center = CGPointMake(CGRectGetMidX(screenBounds), CGRectGetMidY(screenBounds));
+    videoPlayerView.bounds = bounds;
+    videoPlayerView.center = center;
+    videoPlayerView.transform = CGAffineTransformMakeRotation(-M_PI_2);
     [[JPVideoPlayerManager sharedManager] videoPlayer].playerModel.playerLayer.frame = bounds;
 }
 

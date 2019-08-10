@@ -359,7 +359,8 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Call this method to enter full screen.
  */
-- (void)jp_gotoLandscape;
+- (void)jp_gotoLandscapeLeft;
+- (void)jp_gotoLandscapeRight;
 
 /**
  * Call this method to enter full screen.
@@ -367,8 +368,9 @@ NS_ASSUME_NONNULL_BEGIN
  * @param flag       Need landscape animation or not.
  * @param completion Call back when landscape finished.
  */
-- (void)jp_gotoLandscapeAnimated:(BOOL)flag
-                      completion:(dispatch_block_t _Nullable)completion;
+- (void)jp_gotoLandscape:(JPVideoPlayViewInterfaceOrientation) orientation
+                animated:(BOOL)flag
+              completion:(dispatch_block_t)completion;
 
 /**
  * Call this method to exit full screen.

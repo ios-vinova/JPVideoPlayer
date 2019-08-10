@@ -408,7 +408,7 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
 
 - (void)videoPlayerInterfaceOrientationDidChange:(JPVideoPlayViewInterfaceOrientation)interfaceOrientation
                                         videoURL:(NSURL *)videoURL {
-    self.landscapeButton.selected = interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscape;
+    self.landscapeButton.selected = (interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeLeft || interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeRight);
 }
 
 
@@ -440,7 +440,7 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
 
 - (void)landscapeButtonDidClick:(UIButton *)button {
     button.selected = !button.selected;
-    self.playerView.jp_viewInterfaceOrientation == JPVideoPlayViewInterfaceOrientationPortrait ? [self.playerView jp_gotoLandscape] : [self.playerView jp_gotoPortrait];
+    self.playerView.jp_viewInterfaceOrientation == JPVideoPlayViewInterfaceOrientationPortrait ? [self.playerView jp_gotoLandscapeLeft] : [self.playerView jp_gotoPortrait];
 }
 
 - (void)_setup {
@@ -550,7 +550,8 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
             constrainedRect.size.height - kJPVideoPlayerControlBarHeight,
             constrainedRect.size.width,
             kJPVideoPlayerControlBarHeight);
-    if(interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscape){ // landscape.
+    if(interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeLeft ||
+       interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeRight){ 
         CGFloat controlBarOriginX = 0;
         if (@available(iOS 11.0, *)) {
             UIEdgeInsets insets = self.window.safeAreaInsets;
@@ -1135,7 +1136,7 @@ static const NSTimeInterval kJPControlViewAutoHiddenTimeInterval = 5;
 
     self.videoContainerView = ({
         UIView *view = [UIView new];
-        view.backgroundColor = [UIColor clearColor];
+        view.backgroundColor = [UIColor blackColor];
         [self addSubview:view];
         view.userInteractionEnabled = NO;
 
