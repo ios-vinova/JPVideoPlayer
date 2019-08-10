@@ -39,6 +39,7 @@ NSString *JPVideoPlayerControlProgressViewUserDidStartDragNotification = @"com.j
 NSString *JPVideoPlayerControlProgressViewUserDidEndDragNotification = @"com.jpvideoplayer.progressview.user.drag.end.www";;
 @implementation JPVideoPlayerControlProgressView {
     BOOL _userDragging;
+    float _userDragUpdateTo;
     NSTimeInterval _userDragTimeInterval;
 }
 
@@ -90,7 +91,9 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
 - (void)playProgressDidChangeElapsedSeconds:(NSTimeInterval)elapsedSeconds
                                totalSeconds:(NSTimeInterval)totalSeconds
                                    videoURL:(NSURL *)videoURL {
-    if(self.userDragging){
+    if(self.userDragging ||
+       (_userDragUpdateTo > 0 &&
+        abs(_userDragUpdateTo - elapsedSeconds) > 5)) {
         return;
     }
 
@@ -106,6 +109,7 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
     [self.dragSlider setValue:delta];
     self.totalSeconds = totalSeconds;
     self.elapsedSeconds = elapsedSeconds;
+    _userDragUpdateTo = 0;
 }
 
 - (void)didFetchVideoFileLength:(NSUInteger)videoLength
@@ -157,7 +161,8 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
 
         view;
     });
-
+    
+    _userDragUpdateTo = 0;
     self.dragSlider = ({
         UISlider *view = [UISlider new];
         [view setThumbImage:[UIImage imageNamed:[bundlePath stringByAppendingPathComponent:@"jp_videoplayer_progress_handler_normal"]] forState:UIControlStateNormal];
@@ -203,7 +208,9 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
         return;
     }
     [self updateCacheProgressViewIfNeed];
-    [self.playerView jp_seekToTime:CMTimeMakeWithSeconds([self fetchElapsedTimeInterval], 1000)];
+    CMTime time = CMTimeMakeWithSeconds([self fetchElapsedTimeInterval], 1000);
+    _userDragUpdateTo = CMTimeGetSeconds(time);
+    [self.playerView jp_seekToTime:time];
 }
 
 - (void)updateCacheProgressViewIfNeed {
