@@ -173,15 +173,18 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
 }
 
 - (void)dragSliderDidStart:(UISlider *)slider {
+    NSLog(@">>> Slider did started");
     self.userDragging = YES;
     [NSNotificationCenter.defaultCenter postNotificationName:JPVideoPlayerControlProgressViewUserDidStartDragNotification object:self];
 }
 
 - (void)dragSliderDidDrag:(UISlider *)slider {
+    NSLog(@">>> Slider value changed");
     self.userDragTimeInterval = slider.value * self.totalSeconds;
 }
 
 - (void)dragSliderDidEnd:(UISlider *)slider {
+    NSLog(@">>> Slider value ended");
     self.userDragging = NO;
     [self userDidFinishDrag];
     [NSNotificationCenter.defaultCenter postNotificationName:JPVideoPlayerControlProgressViewUserDidEndDragNotification object:self];
