@@ -103,7 +103,7 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
     NSParameterAssert(delta <= 1);
     delta = MIN(1, delta);
     delta = MAX(0, delta);
-    [self.dragSlider setValue:delta animated:YES];
+    [self.dragSlider setValue:delta];
     self.totalSeconds = totalSeconds;
     self.elapsedSeconds = elapsedSeconds;
 }
@@ -166,6 +166,7 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
         [view addTarget:self action:@selector(dragSliderDidDrag:) forControlEvents:UIControlEventValueChanged];
         [view addTarget:self action:@selector(dragSliderDidStart:) forControlEvents:UIControlEventTouchDown];
         [view addTarget:self action:@selector(dragSliderDidEnd:) forControlEvents:UIControlEventTouchUpInside];
+        [view addTarget:self action:@selector(dragSliderDidCancelled:) forControlEvents:UIControlEventTouchCancel];
         [self addSubview:view];
 
         view;
@@ -173,18 +174,24 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
 }
 
 - (void)dragSliderDidStart:(UISlider *)slider {
-    NSLog(@">>> Slider did started");
     self.userDragging = YES;
     [NSNotificationCenter.defaultCenter postNotificationName:JPVideoPlayerControlProgressViewUserDidStartDragNotification object:self];
 }
 
 - (void)dragSliderDidDrag:(UISlider *)slider {
-    NSLog(@">>> Slider value changed");
     self.userDragTimeInterval = slider.value * self.totalSeconds;
 }
 
 - (void)dragSliderDidEnd:(UISlider *)slider {
-    NSLog(@">>> Slider value ended");
+    self.userDragging = NO;
+    [self userDidFinishDrag];
+    [NSNotificationCenter.defaultCenter postNotificationName:JPVideoPlayerControlProgressViewUserDidEndDragNotification object:self];
+}
+
+- (void)dragSliderDidCancelled:(UISlider *)slider {
+    if (!self.userDragging) {
+        return;
+    }
     self.userDragging = NO;
     [self userDidFinishDrag];
     [NSNotificationCenter.defaultCenter postNotificationName:JPVideoPlayerControlProgressViewUserDidEndDragNotification object:self];
