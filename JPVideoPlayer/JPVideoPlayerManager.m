@@ -169,7 +169,8 @@ static NSString * const JPVideoPlayerSDKVersionKey = @"com.jpvideoplayer.sdk.ver
         }
     };
 
-    BOOL isFileURL = [url isFileURL];
+    // Jon 27 Aug: Disable play from cache 
+    BOOL isFileURL = NO;//[url isFileURL];
     if (isFileURL) {
         // play file URL.
         [self playLocalVideoWithShowLayer:showLayer
