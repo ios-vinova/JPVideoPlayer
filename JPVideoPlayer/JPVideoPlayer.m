@@ -285,11 +285,15 @@ static NSString *JPVideoPlayerURL = @"www.newpan.com";
         self.playerModel = nil;
     }
 
+    NSURL *assetUrl = url;
+    if (![url.pathExtension isEqualToString:@"m3u8"]) {
+        assetUrl = [self handleVideoURL];
+    }
     // Re-create all all configuration again.
     // Make the `resourceLoader` become the delegate of 'videoURLAsset', and provide data to the player.
     JPVideoPlayerResourceLoader *resourceLoader = [JPVideoPlayerResourceLoader resourceLoaderWithCustomURL:url];
     resourceLoader.delegate = self;
-    AVURLAsset *videoURLAsset = [AVURLAsset URLAssetWithURL:url options:nil];
+    AVURLAsset *videoURLAsset = [AVURLAsset URLAssetWithURL:assetUrl options:nil];
     [videoURLAsset.resourceLoader setDelegate:resourceLoader queue:dispatch_get_main_queue()];
     AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:videoURLAsset];
     JPVideoPlayerModel *model = [self playerModelWithURL:url
