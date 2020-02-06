@@ -408,7 +408,7 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
 
 - (void)videoPlayerInterfaceOrientationDidChange:(JPVideoPlayViewInterfaceOrientation)interfaceOrientation
                                         videoURL:(NSURL *)videoURL {
-    self.landscapeButton.selected = (interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeLeft || interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeRight);
+    self.landscapeButton.selected = (interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeLeft || interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeRight || interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapePortrait);
 }
 
 
@@ -539,6 +539,9 @@ static const CGFloat kJPVideoPlayerControlBarLandscapeUpOffset = 12;
     return [self initWithControlBar:nil blurImage:nil];
 }
 
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+}
 
 #pragma mark - JPVideoPlayerLayoutProtocol
 
@@ -551,7 +554,8 @@ nearestViewControllerInViewTree:(UIViewController *_Nullable)nearestViewControll
             constrainedRect.size.width,
             kJPVideoPlayerControlBarHeight);
     if(interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeLeft ||
-       interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeRight){ 
+       interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapeRight ||
+       interfaceOrientation == JPVideoPlayViewInterfaceOrientationLandscapePortrait){
         CGFloat controlBarOriginX = 0;
         if (@available(iOS 11.0, *)) {
             UIEdgeInsets insets = self.window.safeAreaInsets;
@@ -986,16 +990,29 @@ static const NSTimeInterval kJPControlViewAutoHiddenTimeInterval = 5;
 
 - (void)setCenter:(CGPoint)center {
     [super setCenter:center];
-    self.videoContainerView.frame = CGRectMake(center.y - self.videoContainerView.bounds.size.width * 0.5,
-            center.x - self.videoContainerView.bounds.size.height * 0.5,
+    CGFloat metaRatio = self.videoContainerView.bounds.size.width / self.videoContainerView.bounds.size.height;
+    
+    CGFloat offsetX;
+    CGFloat offsetY;
+    
+    if (metaRatio < 1.0) {
+        offsetX = self.videoContainerView.bounds.size.width;
+        offsetY = self.videoContainerView.bounds.size.height;
+    } else {
+        offsetX = self.videoContainerView.bounds.size.height;
+        offsetY = self.videoContainerView.bounds.size.width;
+    }
+
+    self.videoContainerView.frame = CGRectMake(center.y - offsetY * 0.5,
+            center.x - offsetX * 0.5,
             self.videoContainerView.bounds.size.width,
             self.videoContainerView.bounds.size.height);
     self.placeholderView.frame = self.videoContainerView.frame;
     self.controlContainerView.frame = self.videoContainerView.frame;
     self.progressContainerView.frame = self.videoContainerView.frame;
     self.bufferingIndicatorContainerView.frame = self.videoContainerView.frame;
-    self.userInteractionContainerView.frame = CGRectMake(center.y -  self.userInteractionContainerView.bounds.size.width * 0.5,
-            center.x -  self.userInteractionContainerView.bounds.size.height * 0.5,
+    self.userInteractionContainerView.frame = CGRectMake(center.y - offsetY * 0.5,
+            center.x - offsetX * 0.5,
             self.userInteractionContainerView.bounds.size.width,
             self.userInteractionContainerView.bounds.size.height - kJPVideoPlayerControlBarHeight);
     [self layoutContainerSubviewsWithBounds:CGRectZero center:center frame:CGRectZero];
@@ -1029,6 +1046,29 @@ static const NSTimeInterval kJPControlViewAutoHiddenTimeInterval = 5;
 }
 
 - (void)layoutContainerSubviewsWithBounds:(CGRect)bounds center:(CGPoint)center frame:(CGRect)frame {
+    
+    CGFloat (^ offsetX)(CGRect) = ^CGFloat (CGRect bounds){
+        CGFloat metaRatio = bounds.size.width / bounds.size.height;
+        
+        if (metaRatio < 1.0) {
+            return bounds.size.width;
+        } else {
+            
+            return bounds.size.height;
+        }
+    };
+    
+    CGFloat (^ offsetY)(CGRect) = ^CGFloat (CGRect bounds){
+        CGFloat metaRatio = bounds.size.width / bounds.size.height;
+        
+        if (metaRatio < 1.0) {
+            return bounds.size.height;
+        } else {
+            
+            return bounds.size.width;
+        }
+    };
+    
     for(UIView *view in self.controlContainerView.subviews){
         if(!CGRectIsEmpty(frame)){
            view.frame = frame;
@@ -1040,8 +1080,9 @@ static const NSTimeInterval kJPControlViewAutoHiddenTimeInterval = 5;
             if(CGPointEqualToPoint(center, CGPointZero)){
                 center = view.center;
             }
-            view.frame = CGRectMake(center.y - bounds.size.width * 0.5,
-                    center.x - bounds.size.height * 0.5,
+            
+            view.frame = CGRectMake(center.y - offsetY(bounds) * 0.5,
+                    center.x - offsetX(bounds) * 0.5,
                     bounds.size.width,
                     bounds.size.height);
         }
@@ -1057,8 +1098,8 @@ static const NSTimeInterval kJPControlViewAutoHiddenTimeInterval = 5;
             if(CGPointEqualToPoint(center, CGPointZero)){
                 center = view.center;
             }
-            view.frame = CGRectMake(center.y - bounds.size.width * 0.5,
-                    center.x - bounds.size.height * 0.5,
+            view.frame = CGRectMake(center.y - offsetY(bounds) * 0.5,
+                    center.x - offsetX(bounds) * 0.5,
                     bounds.size.width,
                     bounds.size.height);
         }
@@ -1074,8 +1115,8 @@ static const NSTimeInterval kJPControlViewAutoHiddenTimeInterval = 5;
             if(CGPointEqualToPoint(center, CGPointZero)){
                 center = view.center;
             }
-            view.frame = CGRectMake(center.y - bounds.size.width * 0.5,
-                    center.x - bounds.size.height * 0.5,
+            view.frame = CGRectMake(center.y - offsetY(bounds) * 0.5,
+                    center.x - offsetX(bounds) * 0.5,
                     bounds.size.width,
                     bounds.size.height);
         }
