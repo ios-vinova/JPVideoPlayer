@@ -344,7 +344,8 @@
 
         // nobody retain this block.
         JPPlayVideoConfiguration internalConfigFinishedBlock = ^(UIView *view, JPVideoPlayerModel *model){
-            NSParameterAssert(model);
+            // incase cannot play video 08/08/2020 by Liberty
+//            NSParameterAssert(model);
             if(configurationCompletion){
                 configurationCompletion(self, model);
             }
