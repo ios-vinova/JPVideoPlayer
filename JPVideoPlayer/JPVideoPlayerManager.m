@@ -163,7 +163,8 @@ static NSString * const JPVideoPlayerSDKVersionKey = @"com.jpvideoplayer.sdk.ver
 
     // nobody retain this block.
     configurationCompletion = ^(UIView *view, JPVideoPlayerModel *model){
-        NSParameterAssert(model);
+        // incase cannot play video 08/08/2020 by Liberty
+//        NSParameterAssert(model);
         if(configurationCompletion){
             configurationCompletion(view, model);
         }
